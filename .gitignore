@@ -1,0 +1,13 @@
+# Ignorar arquivos de ambiente (Chaves secretas)
+.env
+.env.local
+.env.*
+
+# Ignorar pastas do Mac/Windows
+.DS_Store
+Thumbs.db
+
+# Ignorar pastas de dependências futuras
+node_modules/
+__pycache__/
+venv/
