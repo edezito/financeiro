@@ -1,0 +1,33 @@
+name: CI Linters
+
+# Executa toda vez que houver um push ou pull request para a branch main
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  frontend-lint:
+    name: Frontend Linter (Next.js)
+    runs-on: ubuntu-latest
+    
+    # Se o seu frontend estiver dentro de uma pasta específica, defina aqui:
+    defaults:
+      run:
+        working-directory: ./frontend
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20' # Versão recomendada para o Next.js 14+
+
+      - name: Instalar Dependências
+        run: npm ci # Mais rápido e seguro que npm install para CI/CD
+
+      - name: Rodar ESLint
+        run: npm run lint
