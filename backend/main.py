@@ -12,7 +12,7 @@ app = FastAPI(title="Portfolio Manager API")
 
 # Configuração do CORS - Libera o seu Frontend na Vercel
 origins = [
-    "https://financeiro-lake.vercel.app",  # Seu site oficial
+    "https://financeiro-git-main-edezitos-projects.vercel.app",  # Seu site oficial
     "http://localhost:3000",               # Para testes locais
 ]
 
