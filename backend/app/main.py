@@ -1,12 +1,17 @@
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import create_engine
-import os
 from dotenv import load_dotenv
 
-# No Render, as variáveis de ambiente são injetadas direto no sistema,
-# mas mantemos o load_dotenv para o seu desenvolvimento local.
+from app.api.v1.endpoints import finance
+from app.infra.database import engine, Base
+from app.infra import models
+
+# Carrega as variáveis de ambiente (.env)
 load_dotenv()
+
+# Cria as tabelas no Supabase se elas não existirem
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Portfolio Manager API")
 
@@ -25,6 +30,9 @@ app.add_middleware(
 )
 
 DATABASE_URL = os.getenv("DATABASE_URL")
+
+# Registra as rotas de finanças
+app.include_router(finance.router, prefix="/api/v1/finance", tags=["Finance"])
 
 @app.get("/health")
 def health_check():
