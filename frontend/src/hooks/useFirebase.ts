@@ -10,7 +10,7 @@ import {
   signInWithCredential,
   User
 } from 'firebase/auth'
-import { auth, getGoogleProvider, getPhoneProvider } from '@/src/lib/firebase'
+import { auth } from '@/src/lib/firebase'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 
