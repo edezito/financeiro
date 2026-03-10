@@ -29,8 +29,11 @@ export default function Dashboard() {
 
   const handleLogout = async () => {
     try {
-      await signOut(auth)
-      router.push('/login')
+      // Correção: Garantindo que auth não é nulo antes de chamar o signOut
+      if (auth) {
+        await signOut(auth)
+        router.push('/login')
+      }
     } catch (error) {
       console.error("Erro ao fazer logout:", error)
     }
@@ -67,7 +70,8 @@ export default function Dashboard() {
                   <span className="text-2xl font-display font-bold text-foreground">
                     {summaryData.saldo}
                   </span>
-                  <span className="text-xs font-mono text-success block mt-2">
+                  {/* Adicionado fallback de cores caso success não esteja no theme */}
+                  <span className="text-xs font-mono text-emerald-500 block mt-2">
                     +12.5% este mês
                   </span>
                 </CardContent>
@@ -84,7 +88,7 @@ export default function Dashboard() {
                   <span className="text-2xl font-display font-bold text-foreground">
                     {summaryData.patrimonio}
                   </span>
-                  <span className="text-xs font-mono text-success block mt-2">
+                  <span className="text-xs font-mono text-emerald-500 block mt-2">
                     +8.2% este mês
                   </span>
                 </CardContent>
@@ -96,12 +100,12 @@ export default function Dashboard() {
                     <span className="text-sm font-body text-muted-foreground">
                       Receitas
                     </span>
-                    <TrendingUp className="w-4 h-4 text-success" />
+                    <TrendingUp className="w-4 h-4 text-emerald-500" />
                   </div>
                   <span className="text-2xl font-display font-bold text-foreground">
                     {summaryData.receitas}
                   </span>
-                  <span className="text-xs font-mono text-success block mt-2">
+                  <span className="text-xs font-mono text-emerald-500 block mt-2">
                     +4.1%
                   </span>
                 </CardContent>
@@ -113,12 +117,12 @@ export default function Dashboard() {
                     <span className="text-sm font-body text-muted-foreground">
                       Despesas
                     </span>
-                    <TrendingDown className="w-4 h-4 text-destructive" />
+                    <TrendingDown className="w-4 h-4 text-red-500" />
                   </div>
                   <span className="text-2xl font-display font-bold text-foreground">
                     {summaryData.despesas}
                   </span>
-                  <span className="text-xs font-mono text-destructive block mt-2">
+                  <span className="text-xs font-mono text-red-500 block mt-2">
                     +2.3%
                   </span>
                 </CardContent>
@@ -130,7 +134,7 @@ export default function Dashboard() {
                 <CardTitle>Evolução Patrimonial</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="h-64 bg-muted/30 rounded-lg flex items-center justify-center">
+                <div className="h-64 bg-slate-100 rounded-lg flex items-center justify-center">
                   <p className="text-muted-foreground">
                     Gráfico em breve... 🚀
                   </p>
