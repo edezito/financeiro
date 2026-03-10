@@ -1,12 +1,14 @@
-from pydantic import BaseModel
-from typing import Literal
+from pydantic import BaseModel, Field
+from typing import Literal, List
 from datetime import datetime
 
+# --- SCHEMAS DE FINANÇAS (CASHFLOW) ---
+
 class TransactionCreate(BaseModel):
-    description: str
-    amount: float
-    type: Literal["receita", "despesa"]
-    
+    description: str = Field(..., example="Salário Mensal", description="Descrição da transação")
+    amount: float = Field(..., gt=0, example=5000.00, description="Valor da transação (deve ser positivo)")
+    type: Literal["receita", "despesa"] = Field(..., example="receita")
+
 class TransactionResponse(TransactionCreate):
     id: int
     user_id: str
@@ -21,11 +23,13 @@ class BalanceResponse(BaseModel):
     total_despesas: float
     saldo_atual: float
 
+# --- SCHEMAS DE PORTFÓLIO (INVESTIMENTOS) ---
+
 class TradeCreate(BaseModel):
-    ticker: str
-    quantity: int
-    price: float
-    type: Literal["compra", "venda"]
+    ticker: str = Field(..., example="PETR4", description="Ticker do ativo (ex: PETR4, VALE3, AAPL)")
+    quantity: int = Field(..., gt=0, example=100, description="Quantidade negociada")
+    price: float = Field(..., gt=0, example=35.50, description="Preço unitário da operação")
+    type: Literal["compra", "venda"] = Field(..., example="compra")
 
 class AssetResponse(BaseModel):
     ticker: str
@@ -40,8 +44,8 @@ class PortfolioPerformanceResponse(BaseModel):
     quantity: int
     average_price: float
     current_price: float
-    profit_loss_value: float # Lucro/Prejuízo em Dinheiro
-    profit_loss_percentage: float # Rentabilidade Percentual
+    profit_loss_value: float = Field(..., description="Lucro ou Prejuízo nominal em R$")
+    profit_loss_percentage: float = Field(..., description="Rentabilidade percentual (%)")
 
     class Config:
         from_attributes = True
