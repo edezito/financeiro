@@ -1,19 +1,44 @@
 import yfinance as yf
+from typing import Dict, List
 
-def get_current_price(ticker: str) -> float:
+def get_current_prices_batch(tickers: List[str]) -> Dict[str, float]:
+    """
+    Busca os preços atuais de uma lista de tickers de uma só vez.
+    Retorna um dicionário: {"PETR4": 35.50, "VALE3": 62.10}
+    """
+    if not tickers:
+        return {}
+
+    # Formata para o Yahoo Finance (ex: PETR4 -> PETR4.SA)
+    formatted_map = {
+        (f"{t}.SA" if not t.endswith((".SA", ".US")) else t): t 
+        for t in tickers
+    }
+    
     try:
-        # No Yahoo Finance, ações brasileiras precisam do sufixo ".SA" (ex: PETR4.SA)
-        # Se o usuário não mandou com .SA, a gente adiciona automaticamente
-        ticker_formatted = f"{ticker}.SA" if not ticker.endswith((".SA", ".US")) else ticker
+        # Baixa os dados de todos os tickers formatados
+        data = yf.download(list(formatted_map.keys()), period="1d", interval="1m", progress=False)
         
-        # Busca os dados do ativo
-        stock = yf.Ticker(ticker_formatted)
-        
-        # fast_info é o jeito mais rápido de pegar o preço atual sem baixar o histórico todo
-        current_price = stock.fast_info.last_price
-        
-        return round(current_price, 2)
+        prices = {}
+        for formatted_ticker, original_ticker in formatted_map.items():
+            try:
+                # Tenta pegar o último preço de fechamento (Close)
+                # O yfinance retorna um DataFrame; se for apenas um ticker, a estrutura muda levemente
+                if len(formatted_map) > 1:
+                    price = data['Close'][formatted_ticker].iloc[-1]
+                else:
+                    price = data['Close'].iloc[-1]
+                
+                prices[original_ticker] = round(float(price), 2)
+            except Exception:
+                prices[original_ticker] = 0.0
+                
+        return prices
     except Exception as e:
-        # Se der erro (ex: sem internet ou ticker inválido), retorna 0.0 para não quebrar a API
-        print(f"Erro ao buscar cotacao para {ticker}: {e}")
-        return 0.0
+        print(f"Erro ao buscar lote de cotacoes: {e}")
+        return {t: 0.0 for t in tickers}
+
+# Mantemos a versão individual para compatibilidade, se necessário
+def get_current_price(ticker: str) -> float:
+    result = get_current_prices_batch([ticker])
+    return result.get(ticker, 0.0)

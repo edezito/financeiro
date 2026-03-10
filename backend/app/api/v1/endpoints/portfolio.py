@@ -5,17 +5,18 @@ from typing import List
 from app.api.core import schemas
 from app.infra import models
 from app.infra.database import get_db
-
 from app.services import yfinance_service
 
-router = APIRouter()
+router = APIRouter(prefix="/portfolio", tags=["Portfólio de Ativos"])
 
-@router.post("/trade", response_model=schemas.AssetResponse)
+@router.post("/trade", 
+             response_model=schemas.AssetResponse, 
+             summary="Registrar Compra/Venda",
+             description="Executa uma ordem de trade. Atualiza preço médio em compras e valida saldo em vendas.")
 def trade_asset(trade: schemas.TradeCreate, db: Session = Depends(get_db)):
     logged_in_user_id = "user_123"
-    ticker_upper = trade.ticker.upper() # Padroniza para maiúsculo (ex: petr4 -> PETR4)
+    ticker_upper = trade.ticker.upper()
 
-    # Busca se o usuário já tem essa ação na carteira
     asset = db.query(models.Asset).filter(
         models.Asset.user_id == logged_in_user_id,
         models.Asset.ticker == ticker_upper
@@ -23,14 +24,11 @@ def trade_asset(trade: schemas.TradeCreate, db: Session = Depends(get_db)):
 
     if trade.type == "compra":
         if asset:
-            # Calcula o novo preço médio e soma a quantidade
             total_cost_current = asset.quantity * asset.average_price
             total_cost_new = trade.quantity * trade.price
-            
             asset.quantity += trade.quantity
             asset.average_price = (total_cost_current + total_cost_new) / asset.quantity
         else:
-            # Primeira compra desse ativo
             asset = models.Asset(
                 user_id=logged_in_user_id, 
                 ticker=ticker_upper, 
@@ -40,16 +38,12 @@ def trade_asset(trade: schemas.TradeCreate, db: Session = Depends(get_db)):
             db.add(asset)
 
     elif trade.type == "venda":
-        # CRITÉRIO DE ACEITE: Validação de quantidade
         if not asset or asset.quantity < trade.quantity:
             raise HTTPException(
                 status_code=400, 
                 detail=f"Saldo insuficiente de {ticker_upper}. Você possui {asset.quantity if asset else 0} cotas."
             )
-        
         asset.quantity -= trade.quantity
-        
-        # Se zerar a posição, podemos zerar o preço médio
         if asset.quantity == 0:
             asset.average_price = 0.0
 
@@ -57,48 +51,49 @@ def trade_asset(trade: schemas.TradeCreate, db: Session = Depends(get_db)):
     db.refresh(asset)
     return asset
 
-@router.get("/positions", response_model=List[schemas.AssetResponse])
+@router.get("/positions", 
+            response_model=List[schemas.AssetResponse], 
+            summary="Listar Posições Atuais",
+            description="Retorna todos os ativos com saldo positivo na carteira.")
 def get_portfolio(db: Session = Depends(get_db)):
     logged_in_user_id = "user_123"
-    # Retorna apenas os ativos que o usuário ainda tem saldo (> 0)
-    assets = db.query(models.Asset).filter(
+    return db.query(models.Asset).filter(
         models.Asset.user_id == logged_in_user_id,
         models.Asset.quantity > 0
     ).all()
-    return assets
 
-@router.get("/performance", response_model=List[schemas.PortfolioPerformanceResponse])
+@router.get("/performance", 
+            response_model=List[schemas.PortfolioPerformanceResponse], 
+            summary="Calcular Performance (PL)",
+            description="Cruza os dados do banco com preços em lote via Yahoo Finance para maior rapidez.")
 def get_portfolio_performance(db: Session = Depends(get_db)):
     logged_in_user_id = "user_123"
     
-    # 1. Pega todas as posições do usuário no banco
     assets = db.query(models.Asset).filter(
         models.Asset.user_id == logged_in_user_id,
         models.Asset.quantity > 0
     ).all()
 
-    performance_list = []
-    
-    # 2. Para cada ativo, busca o preço e calcula o lucro
-    for asset in assets:
-        current_price = yfinance_service.get_current_price(asset.ticker)
-        
-        # Matemática Financeira 101
-        total_invested = asset.quantity * asset.average_price
-        current_total_value = asset.quantity * current_price
-        
-        pl_value = current_total_value - total_invested
-        
-        pl_percentage = 0.0
-        if total_invested > 0:
-            pl_percentage = (pl_value / total_invested) * 100
+    if not assets:
+        return []
 
-        # Adiciona na lista de resposta
+    # Otimização: Busca todos os preços de uma vez
+    tickers = [a.ticker for a in assets]
+    current_prices = yfinance_service.get_current_prices_batch(tickers)
+
+    performance_list = []
+    for asset in assets:
+        price = current_prices.get(asset.ticker, 0.0)
+        total_invested = asset.quantity * asset.average_price
+        current_total_value = asset.quantity * price
+        pl_value = current_total_value - total_invested
+        pl_percentage = (pl_value / total_invested * 100) if total_invested > 0 else 0.0
+
         performance_list.append({
             "ticker": asset.ticker,
             "quantity": asset.quantity,
             "average_price": round(asset.average_price, 2),
-            "current_price": current_price,
+            "current_price": price,
             "profit_loss_value": round(pl_value, 2),
             "profit_loss_percentage": round(pl_percentage, 2)
         })
