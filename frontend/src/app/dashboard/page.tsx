@@ -1,43 +1,160 @@
 'use client'
+
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/src/lib/supabase'
+import DashboardHeader from '@/src/app/components/DashboardHeader'
+import Lancamentos from '@/src/app/components/Lancamentos'
+import { Card, CardContent, CardHeader, CardTitle } from '@/src/app/components/ui/Card'
+import { Wallet, TrendingUp, TrendingDown, BarChart3 } from 'lucide-react'
+import { useAuth } from '@/src/contexts/AuthContext'
+import { auth } from '@/src/lib/firebase'
+import { signOut } from 'firebase/auth'
+
+const summaryData = {
+  saldo: 'R$ 14.570,00',
+  patrimonio: 'R$ 21.000,00',
+  receitas: 'R$ 12.150,00',
+  despesas: 'R$ 2.580,00',
+}
 
 export default function Dashboard() {
   const router = useRouter()
+  const { user, loading } = useAuth()
 
   useEffect(() => {
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
-        router.push('/')
-      }
+    if (!loading && !user) {
+      router.push('/login')
     }
-    
-    checkSession()
-  }, [router])
+  }, [user, loading, router])
 
   const handleLogout = async () => {
-    await supabase.auth.signOut()
-    router.push('/')
-    router.refresh()
+    try {
+      // Correção: Garantindo que auth não é nulo antes de chamar o signOut
+      if (auth) {
+        await signOut(auth)
+        router.push('/login')
+      }
+    } catch (error) {
+      console.error("Erro ao fazer logout:", error)
+    }
+  }
+
+  if (loading || !user) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-muted-foreground animate-pulse">Carregando seus dados...</div>
+      </div>
+    )
   }
 
   return (
-    <div className="min-h-screen bg-black text-white p-8">
-      <header className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-bold text-green-500">Minha Carteira 📈</h1>
-        <button 
-          onClick={handleLogout}
-          className="bg-gray-800 px-4 py-2 rounded-lg hover:bg-red-600 transition"
-        >
-          Sair
-        </button>
-      </header>
-      <div className="bg-gray-900 p-6 rounded-xl border border-gray-800">
-        <h2 className="text-3xl font-bold text-white">Dashboard</h2>
-        <p className="text-gray-400 mt-2">Bem-vindo à sua carteira de investimentos.</p>
-      </div>
+    <div className="min-h-screen bg-background">
+      <DashboardHeader onLogout={handleLogout} />
+
+      <main className="container mx-auto px-6 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+          <div className="lg:col-span-2">
+            <Lancamentos />
+          </div>
+
+          <div className="lg:col-span-3 space-y-6">
+            <div className="grid grid-cols-2 gap-4">
+              <Card>
+                <CardContent className="p-5">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-body text-muted-foreground">
+                      Saldo em Caixa
+                    </span>
+                    <Wallet className="w-4 h-4 text-muted-foreground" />
+                  </div>
+                  <span className="text-2xl font-display font-bold text-foreground">
+                    {summaryData.saldo}
+                  </span>
+                  {/* Adicionado fallback de cores caso success não esteja no theme */}
+                  <span className="text-xs font-mono text-emerald-500 block mt-2">
+                    +12.5% este mês
+                  </span>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-5">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-body text-muted-foreground">
+                      Patrimônio Investido
+                    </span>
+                    <BarChart3 className="w-4 h-4 text-muted-foreground" />
+                  </div>
+                  <span className="text-2xl font-display font-bold text-foreground">
+                    {summaryData.patrimonio}
+                  </span>
+                  <span className="text-xs font-mono text-emerald-500 block mt-2">
+                    +8.2% este mês
+                  </span>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-5">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-body text-muted-foreground">
+                      Receitas
+                    </span>
+                    <TrendingUp className="w-4 h-4 text-emerald-500" />
+                  </div>
+                  <span className="text-2xl font-display font-bold text-foreground">
+                    {summaryData.receitas}
+                  </span>
+                  <span className="text-xs font-mono text-emerald-500 block mt-2">
+                    +4.1%
+                  </span>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-5">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-body text-muted-foreground">
+                      Despesas
+                    </span>
+                    <TrendingDown className="w-4 h-4 text-red-500" />
+                  </div>
+                  <span className="text-2xl font-display font-bold text-foreground">
+                    {summaryData.despesas}
+                  </span>
+                  <span className="text-xs font-mono text-red-500 block mt-2">
+                    +2.3%
+                  </span>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Evolução Patrimonial</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-64 bg-slate-100 rounded-lg flex items-center justify-center">
+                  <p className="text-muted-foreground">
+                    Gráfico em breve... 🚀
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Transações Recentes</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8 text-muted-foreground">
+                  Nenhuma transação recente
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </main>
     </div>
   )
 }
