@@ -1,32 +1,35 @@
+// src/app/register/page.tsx
 'use client'
+
 import { useState } from 'react'
 import { supabase } from '@/src/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { Button } from '@/src/app/components/ui/Button'
+import { Input } from '@/src/app/components/ui/Input'
+import { toast } from 'sonner'
+import { CheckCircle } from 'lucide-react'
 
 export default function RegisterPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const router = useRouter()
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    setError('')
 
-    // Validação básica
     if (password !== confirmPassword) {
-      setError('As senhas não coincidem')
+      toast.error('As senhas não coincidem')
       setLoading(false)
       return
     }
 
     if (password.length < 6) {
-      setError('A senha deve ter pelo menos 6 caracteres')
+      toast.error('A senha deve ter pelo menos 6 caracteres')
       setLoading(false)
       return
     }
@@ -40,35 +43,33 @@ export default function RegisterPage() {
     })
 
     if (error) {
-      setError(error.message)
+      toast.error(error.message)
       setLoading(false)
     } else {
       setSuccess(true)
-      // Opcional: redirecionar após alguns segundos
+      toast.success('Cadastro realizado! Verifique seu e-mail.')
       setTimeout(() => {
-        router.push('/')
+        router.push('/login')
       }, 3000)
     }
   }
 
   if (success) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center p-4">
-        <div className="bg-gray-800 p-8 rounded-2xl shadow-xl w-full max-w-md border border-gray-700 text-center">
-          <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-          <h2 className="text-2xl font-bold text-white mb-2">Cadastro realizado!</h2>
-          <p className="text-gray-400 mb-4">
-            Enviamos um link de confirmação para <strong className="text-green-500">{email}</strong>
+      <div className="min-h-screen bg-background flex items-center justify-center px-4">
+        <div className="text-center">
+          <CheckCircle className="w-12 h-12 text-success mx-auto mb-4" />
+          <h2 className="text-xl font-display font-bold text-foreground mb-2">
+            Cadastro realizado!
+          </h2>
+          <p className="text-sm font-body text-muted-foreground mb-1">
+            Enviamos um link de confirmação para {email}
           </p>
-          <p className="text-gray-500 text-sm">
-            Verifique sua caixa de entrada e spam para confirmar seu e-mail.
+          <p className="text-xs font-body text-muted-foreground">
+            Verifique sua caixa de entrada e spam.
           </p>
-          <p className="text-gray-500 text-sm mt-4">
-            Redirecionando para o login em 3 segundos...
+          <p className="text-xs font-body text-muted-foreground mt-4">
+            Redirecionando para o login...
           </p>
         </div>
       </div>
@@ -76,78 +77,71 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center p-4">
-      <div className="bg-gray-800 p-8 rounded-2xl shadow-xl w-full max-w-md border border-gray-700">
+    <div className="min-h-screen bg-background flex items-center justify-center px-4">
+      <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Criar Conta 📝</h1>
-          <p className="text-gray-400">Cadastre-se para gerenciar seus investimentos</p>
+          <h1 className="text-2xl font-display font-bold text-foreground tracking-tight">
+            Criar Conta
+          </h1>
+          <p className="text-sm font-body text-muted-foreground mt-2">
+            Cadastre-se para gerenciar seus investimentos
+          </p>
         </div>
 
-        <form onSubmit={handleRegister} className="space-y-6">
-          {error && (
-            <div className="bg-red-500/10 border border-red-500 text-red-500 p-3 rounded-lg text-sm">
-              {error}
-            </div>
-          )}
-
+        <form onSubmit={handleRegister} className="space-y-4">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="text-xs font-body text-muted-foreground mb-1.5 block">
               E-mail
             </label>
-            <input
-              id="email"
+            <Input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full p-3 rounded-lg bg-gray-700 border border-gray-600 text-white focus:outline-none focus:border-green-500 transition"
               placeholder="seu@email.com"
               required
             />
           </div>
-
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="text-xs font-body text-muted-foreground mb-1.5 block">
               Senha
             </label>
-            <input
-              id="password"
+            <Input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-3 rounded-lg bg-gray-700 border border-gray-600 text-white focus:outline-none focus:border-green-500 transition"
               placeholder="••••••••"
               required
             />
-            <p className="text-xs text-gray-500 mt-1">Mínimo de 6 caracteres</p>
+            <p className="text-xs font-body text-muted-foreground mt-1">
+              Mínimo de 6 caracteres
+            </p>
           </div>
-
           <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-2">
+            <label className="text-xs font-body text-muted-foreground mb-1.5 block">
               Confirmar Senha
             </label>
-            <input
-              id="confirmPassword"
+            <Input
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full p-3 rounded-lg bg-gray-700 border border-gray-600 text-white focus:outline-none focus:border-green-500 transition"
               placeholder="••••••••"
               required
             />
           </div>
-
-          <button
+          <Button
             type="submit"
+            variant="default"
+            size="lg"
+            className="w-full"
             disabled={loading}
-            className="w-full bg-green-600 hover:bg-green-700 p-3 rounded-lg font-semibold text-white transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? 'Cadastrando...' : 'Cadastrar'}
-          </button>
+          </Button>
         </form>
 
-        <p className="text-center text-gray-400 mt-6">
+        <p className="text-center text-sm font-body text-muted-foreground mt-6">
           Já tem uma conta?{' '}
-          <Link href="/" className="text-green-500 hover:text-green-400 font-medium">
+          <Link href="/login" className="text-interactive hover:underline">
             Fazer login
           </Link>
         </p>

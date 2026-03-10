@@ -1,16 +1,33 @@
+// src/app/dashboard/page.tsx
 'use client'
-import { useEffect } from 'react'
+
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/src/lib/supabase'
+import DashboardHeader from '@/src/app/components/DashboardHeader'
+import Lancamentos from '@/src/app/components/Lancamentos'
+import { Card, CardContent, CardHeader, CardTitle } from '@/src/app/components/ui/Card'
+import { Wallet, TrendingUp, TrendingDown, BarChart3 } from 'lucide-react'
+
+// Placeholder para dados (depois virão da API)
+const summaryData = {
+  saldo: 'R$ 14.570,00',
+  patrimonio: 'R$ 21.000,00',
+  receitas: 'R$ 12.150,00',
+  despesas: 'R$ 2.580,00',
+}
 
 export default function Dashboard() {
   const router = useRouter()
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) {
-        router.push('/')
+        router.push('/login')
+      } else {
+        setLoading(false)
       }
     }
     
@@ -19,25 +36,130 @@ export default function Dashboard() {
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
-    router.push('/')
+    router.push('/login')
     router.refresh()
   }
 
-  return (
-    <div className="min-h-screen bg-black text-white p-8">
-      <header className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-bold text-green-500">Minha Carteira 📈</h1>
-        <button 
-          onClick={handleLogout}
-          className="bg-gray-800 px-4 py-2 rounded-lg hover:bg-red-600 transition"
-        >
-          Sair
-        </button>
-      </header>
-      <div className="bg-gray-900 p-6 rounded-xl border border-gray-800">
-        <h2 className="text-3xl font-bold text-white">Dashboard</h2>
-        <p className="text-gray-400 mt-2">Bem-vindo à sua carteira de investimentos.</p>
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-muted-foreground">Carregando...</div>
       </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <DashboardHeader onLogout={handleLogout} />
+
+      <main className="container mx-auto px-6 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+          {/* Coluna da Esquerda - Lançamentos (40%) */}
+          <div className="lg:col-span-2">
+            <Lancamentos />
+          </div>
+
+          {/* Coluna da Direita - Visão Geral (60%) */}
+          <div className="lg:col-span-3 space-y-6">
+            {/* Cards de Resumo */}
+            <div className="grid grid-cols-2 gap-4">
+              <Card>
+                <CardContent className="p-5">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-body text-muted-foreground">
+                      Saldo em Caixa
+                    </span>
+                    <Wallet className="w-4 h-4 text-muted-foreground" />
+                  </div>
+                  <span className="text-2xl font-display font-bold text-foreground">
+                    {summaryData.saldo}
+                  </span>
+                  <span className="text-xs font-mono text-success block mt-2">
+                    +12.5% este mês
+                  </span>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-5">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-body text-muted-foreground">
+                      Patrimônio Investido
+                    </span>
+                    <BarChart3 className="w-4 h-4 text-muted-foreground" />
+                  </div>
+                  <span className="text-2xl font-display font-bold text-foreground">
+                    {summaryData.patrimonio}
+                  </span>
+                  <span className="text-xs font-mono text-success block mt-2">
+                    +8.2% este mês
+                  </span>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-5">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-body text-muted-foreground">
+                      Receitas
+                    </span>
+                    <TrendingUp className="w-4 h-4 text-success" />
+                  </div>
+                  <span className="text-2xl font-display font-bold text-foreground">
+                    {summaryData.receitas}
+                  </span>
+                  <span className="text-xs font-mono text-success block mt-2">
+                    +4.1%
+                  </span>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-5">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-body text-muted-foreground">
+                      Despesas
+                    </span>
+                    <TrendingDown className="w-4 h-4 text-destructive" />
+                  </div>
+                  <span className="text-2xl font-display font-bold text-foreground">
+                    {summaryData.despesas}
+                  </span>
+                  <span className="text-xs font-mono text-destructive block mt-2">
+                    +2.3%
+                  </span>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Placeholder para Gráfico */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Evolução Patrimonial</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="h-64 bg-muted/30 rounded-lg flex items-center justify-center">
+                  <p className="text-muted-foreground">
+                    Gráfico em breve... 🚀
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Placeholder para Transações Recentes */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Transações Recentes</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8 text-muted-foreground">
+                  Nenhuma transação recente
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </main>
     </div>
   )
 }

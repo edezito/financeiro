@@ -1,3 +1,5 @@
+// src/app/layout.tsx
+import { Toaster } from 'sonner'
 import './globals.css'
 
 export const metadata = {
@@ -12,7 +14,20 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR">
-      <body className="bg-black text-white">{children}</body>
+      <body className="bg-background text-foreground font-body antialiased">
+        {children}
+        <Toaster 
+          position="top-right"
+          toastOptions={{
+            style: {
+              background: 'hsl(0, 0%, 10%)',
+              color: 'hsl(0, 0%, 96%)',
+              border: '1px solid hsl(0, 0%, 17%)',
+              fontFamily: 'Inter, sans-serif',
+            },
+          }}
+        />
+      </body>
     </html>
   )
 }
