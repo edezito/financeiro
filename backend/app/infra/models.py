@@ -13,3 +13,12 @@ class Transaction(Base):
     amount = Column(Float)
     type = Column(String) # 'receita' ou 'despesa'
     created_at = Column(DateTime, default=datetime.utcnow)
+
+class Asset(Base):
+    __tablename__ = "assets"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(String, index=True)
+    ticker = Column(String, index=True) # Ex: PETR4, VALE3
+    quantity = Column(Integer, default=0)
+    average_price = Column(Float, default=0.0)

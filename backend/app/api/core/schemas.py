@@ -20,3 +20,17 @@ class BalanceResponse(BaseModel):
     total_receitas: float
     total_despesas: float
     saldo_atual: float
+
+class TradeCreate(BaseModel):
+    ticker: str
+    quantity: int
+    price: float
+    type: Literal["compra", "venda"]
+
+class AssetResponse(BaseModel):
+    ticker: str
+    quantity: int
+    average_price: float
+
+    class Config:
+        from_attributes = True

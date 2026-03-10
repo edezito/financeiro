@@ -4,6 +4,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
 from app.api.v1.endpoints import finance
+from app.api.v1.endpoints import portfolio
+
 from app.infra.database import engine, Base
 from app.infra import models
 
@@ -33,6 +35,7 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 
 # Registra as rotas de finanças
 app.include_router(finance.router, prefix="/api/v1/finance", tags=["Finance"])
+app.include_router(portfolio.router, prefix="/api/v1/portfolio", tags=["Portfolio"])
 
 @app.get("/health")
 def health_check():
