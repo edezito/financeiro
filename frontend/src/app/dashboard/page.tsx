@@ -1,15 +1,15 @@
-// src/app/dashboard/page.tsx
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/src/lib/supabase'
 import DashboardHeader from '@/src/app/components/DashboardHeader'
 import Lancamentos from '@/src/app/components/Lancamentos'
 import { Card, CardContent, CardHeader, CardTitle } from '@/src/app/components/ui/Card'
 import { Wallet, TrendingUp, TrendingDown, BarChart3 } from 'lucide-react'
+import { useAuth } from '@/src/contexts/AuthContext'
+import { auth } from '@/src/lib/firebase'
+import { signOut } from 'firebase/auth'
 
-// Placeholder para dados (depois virão da API)
 const summaryData = {
   saldo: 'R$ 14.570,00',
   patrimonio: 'R$ 21.000,00',
@@ -19,31 +19,27 @@ const summaryData = {
 
 export default function Dashboard() {
   const router = useRouter()
-  const [loading, setLoading] = useState(true)
+  const { user, loading } = useAuth()
 
   useEffect(() => {
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
-        router.push('/login')
-      } else {
-        setLoading(false)
-      }
+    if (!loading && !user) {
+      router.push('/login')
     }
-    
-    checkSession()
-  }, [router])
+  }, [user, loading, router])
 
   const handleLogout = async () => {
-    await supabase.auth.signOut()
-    router.push('/login')
-    router.refresh()
+    try {
+      await signOut(auth)
+      router.push('/login')
+    } catch (error) {
+      console.error("Erro ao fazer logout:", error)
+    }
   }
 
-  if (loading) {
+  if (loading || !user) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-muted-foreground">Carregando...</div>
+        <div className="text-muted-foreground animate-pulse">Carregando seus dados...</div>
       </div>
     )
   }
@@ -54,14 +50,11 @@ export default function Dashboard() {
 
       <main className="container mx-auto px-6 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-          {/* Coluna da Esquerda - Lançamentos (40%) */}
           <div className="lg:col-span-2">
             <Lancamentos />
           </div>
 
-          {/* Coluna da Direita - Visão Geral (60%) */}
           <div className="lg:col-span-3 space-y-6">
-            {/* Cards de Resumo */}
             <div className="grid grid-cols-2 gap-4">
               <Card>
                 <CardContent className="p-5">
@@ -132,7 +125,6 @@ export default function Dashboard() {
               </Card>
             </div>
 
-            {/* Placeholder para Gráfico */}
             <Card>
               <CardHeader>
                 <CardTitle>Evolução Patrimonial</CardTitle>
@@ -146,7 +138,6 @@ export default function Dashboard() {
               </CardContent>
             </Card>
 
-            {/* Placeholder para Transações Recentes */}
             <Card>
               <CardHeader>
                 <CardTitle>Transações Recentes</CardTitle>
