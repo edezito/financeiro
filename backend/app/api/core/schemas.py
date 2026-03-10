@@ -34,3 +34,14 @@ class AssetResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class PortfolioPerformanceResponse(BaseModel):
+    ticker: str
+    quantity: int
+    average_price: float
+    current_price: float
+    profit_loss_value: float # Lucro/Prejuízo em Dinheiro
+    profit_loss_percentage: float # Rentabilidade Percentual
+
+    class Config:
+        from_attributes = True
