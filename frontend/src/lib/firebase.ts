@@ -1,11 +1,8 @@
-import { initializeApp, getApps, FirebaseApp } from "firebase/app";
+import { initializeApp, getApps, getApp } from "firebase/app";
 import { 
   getAuth, 
   GoogleAuthProvider,
   PhoneAuthProvider,
-  browserLocalPersistence,
-  setPersistence,
-  Auth
 } from "firebase/auth";
 
 const firebaseConfig = {
@@ -17,31 +14,13 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
 };
 
-// Inicializa o Firebase apenas no cliente com os tipos corretos
-let app: FirebaseApp | null = null;
-let auth: Auth | null = null;
-let googleProvider: GoogleAuthProvider | null = null;
-let phoneProvider: PhoneAuthProvider | null = null;
+// Inicialização Singleton
+const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const googleProvider = new GoogleAuthProvider();
+const phoneProvider = new PhoneAuthProvider(auth);
 
-if (typeof window !== 'undefined') {
-  try {
-    app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
-    auth = getAuth(app);
-    
-    // Configura persistência local
-    setPersistence(auth, browserLocalPersistence)
-      .catch((error) => {
-        console.error("Erro ao configurar persistência:", error);
-      });
+// A persistência é configurada automaticamente como 'indexedDB' no browser pelo Firebase v10
+// Não é estritamente necessário chamar setPersistence manualmente na maioria dos casos Next.js
 
-    // Inicializa providers
-    googleProvider = new GoogleAuthProvider();
-    phoneProvider = new PhoneAuthProvider(auth);
-    
-    console.log('✅ Firebase Auth inicializado no cliente');
-  } catch (error) {
-    console.error("Erro ao inicializar Firebase:", error);
-  }
-}
-
-export { auth, googleProvider, phoneProvider };
+export { app, auth, googleProvider, phoneProvider };
