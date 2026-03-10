@@ -1,10 +1,11 @@
-import { initializeApp, getApps } from "firebase/app";
+import { initializeApp, getApps, FirebaseApp } from "firebase/app";
 import { 
   getAuth, 
   GoogleAuthProvider,
   PhoneAuthProvider,
   browserLocalPersistence,
-  setPersistence
+  setPersistence,
+  Auth
 } from "firebase/auth";
 
 const firebaseConfig = {
@@ -16,11 +17,11 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
 };
 
-// Inicializa o Firebase apenas no cliente
-let app: any = null;
-let auth: any = null;
-let googleProvider: any = null;
-let phoneProvider: any = null;
+// Inicializa o Firebase apenas no cliente com os tipos corretos
+let app: FirebaseApp | null = null;
+let auth: Auth | null = null;
+let googleProvider: GoogleAuthProvider | null = null;
+let phoneProvider: PhoneAuthProvider | null = null;
 
 if (typeof window !== 'undefined') {
   try {

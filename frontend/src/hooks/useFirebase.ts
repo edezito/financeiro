@@ -6,11 +6,11 @@ import {
   signInWithPopup,
   signInWithPhoneNumber,
   RecaptchaVerifier,
-  PhoneAuthProvider,
-  signInWithCredential,
+  ConfirmationResult,
   User
 } from 'firebase/auth'
-import { auth } from '@/src/lib/firebase'
+import { FirebaseError } from 'firebase/app'
+import { auth, googleProvider } from '@/src/lib/firebase'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 
@@ -29,6 +29,16 @@ export function useFirebaseAuth() {
     return () => unsubscribe()
   }, [])
 
+  const handleAuthError = (error: unknown) => {
+    if (error instanceof FirebaseError) {
+      toast.error(`Erro de autenticação: ${error.message} (Código: ${error.code})`)
+    } else if (error instanceof Error) {
+      toast.error(`Erro inesperado: ${error.message}`)
+    } else {
+      toast.error('Ocorreu um erro desconhecido.')
+    }
+  }
+
   const loginWithEmail = async (email: string, password: string) => {
     if (!auth) {
       toast.error('Firebase não inicializado')
@@ -41,7 +51,7 @@ export function useFirebaseAuth() {
       toast.success('Login realizado com sucesso!')
       router.refresh()
       router.push('/dashboard')
-    } catch (error: any) {
+    } catch (error: unknown) {
       handleAuthError(error)
     } finally {
       setLoading(false)
@@ -56,14 +66,13 @@ export function useFirebaseAuth() {
 
     setLoading(true)
     try {
-      const provider = getGoogleProvider()
-      if (!provider) throw new Error('Provider não disponível')
+      if (!googleProvider) throw new Error('Provider não disponível')
       
-      await signInWithPopup(auth, provider)
+      await signInWithPopup(auth, googleProvider)
       toast.success('Login com Google realizado!')
       router.refresh()
       router.push('/dashboard')
-    } catch (error: any) {
+    } catch (error: unknown) {
       handleAuthError(error)
     } finally {
       setLoading(false)
@@ -74,76 +83,49 @@ export function useFirebaseAuth() {
     if (typeof window === 'undefined' || !auth) return null
     
     return new RecaptchaVerifier(auth, containerId, {
-      size: 'invisible',
-      callback: () => {}
+      size: 'invisible'
     })
   }
 
-  const sendOTP = async (phoneNumber: string, recaptchaVerifier: any) => {
-    if (!auth) {
+  const loginWithPhone = async (phoneNumber: string, appVerifier: RecaptchaVerifier) => {
+     if (!auth) {
       toast.error('Firebase não inicializado')
       return null
     }
 
     setLoading(true)
     try {
-      const confirmation = await signInWithPhoneNumber(
-        auth, 
-        phoneNumber, 
-        recaptchaVerifier
-      )
-      return confirmation
-    } catch (error: any) {
-      handleAuthError(error)
-      return null
+        const confirmationResult = await signInWithPhoneNumber(auth, phoneNumber, appVerifier)
+        return confirmationResult
+    } catch (error: unknown) {
+        handleAuthError(error)
+        return null
     } finally {
-      setLoading(false)
+        setLoading(false)
     }
   }
 
-  const verifyOTP = async (verificationId: string, otpCode: string) => {
-    if (!auth) {
-      toast.error('Firebase não inicializado')
-      return
-    }
-
-    setLoading(true)
-    try {
-      const credential = PhoneAuthProvider.credential(verificationId, otpCode)
-      await signInWithCredential(auth, credential)
-      toast.success('Login realizado com sucesso!')
-      router.refresh()
-      router.push('/dashboard')
-    } catch (error: any) {
-      handleAuthError(error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleAuthError = (error: any) => {
-    console.error('Auth error:', error)
-    
-    if (error.code === 'auth/invalid-credential') {
-      toast.error('E-mail ou senha incorretos.')
-    } else if (error.code === 'auth/too-many-requests') {
-      toast.error('Muitas tentativas. Tente novamente mais tarde.')
-    } else if (error.code === 'auth/popup-closed-by-user') {
-      toast.error('Popup fechado antes de completar o login.')
-    } else if (error.code === 'auth/cancelled-popup-request') {
-      // Ignorar, é apenas outro popup aberto
-    } else {
-      toast.error('Erro: ' + error.message)
-    }
+  const verifyOTP = async (confirmationResult: ConfirmationResult, code: string) => {
+      setLoading(true)
+      try {
+          await confirmationResult.confirm(code)
+          toast.success('Login por telefone realizado com sucesso!')
+          router.refresh()
+          router.push('/dashboard')
+      } catch (error: unknown) {
+          handleAuthError(error)
+      } finally {
+          setLoading(false)
+      }
   }
 
   return {
-    user,
-    loading,
-    loginWithEmail,
-    loginWithGoogle,
-    sendOTP,
-    verifyOTP,
-    setupRecaptcha
+      loading,
+      user,
+      loginWithEmail,
+      loginWithGoogle,
+      setupRecaptcha,
+      loginWithPhone,
+      verifyOTP
   }
 }

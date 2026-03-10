@@ -13,6 +13,7 @@ import {
   sendEmailVerification,
   signInWithPopup 
 } from 'firebase/auth'
+import { FirebaseError } from 'firebase/app'
 import { Mail, Lock, User, Chrome, ArrowRight, LineChart, CheckCircle } from 'lucide-react'
 
 export default function RegisterPage() {
@@ -54,11 +55,17 @@ export default function RegisterPage() {
       setTimeout(() => {
         router.push('/login')
       }, 3000)
-    } catch (error: any) {
-      if (error.code === 'auth/email-already-in-use') {
-        toast.error('Este e-mail já está cadastrado.')
+    } catch (error: unknown) {
+      if (error instanceof FirebaseError) {
+        if (error.code === 'auth/email-already-in-use') {
+          toast.error('Este e-mail já está cadastrado.')
+        } else {
+          toast.error('Erro ao cadastrar: ' + error.message)
+        }
+      } else if (error instanceof Error) {
+        toast.error('Erro inesperado: ' + error.message)
       } else {
-        toast.error('Erro ao cadastrar: ' + error.message)
+        toast.error('Ocorreu um erro desconhecido.')
       }
     } finally {
       setLoading(false)
@@ -77,11 +84,17 @@ export default function RegisterPage() {
       toast.success('Cadastro com Google realizado!')
       router.refresh()
       router.push('/dashboard')
-    } catch (error: any) {
-      if (error.code === 'auth/popup-closed-by-user') {
-        // Usuário fechou o popup, não mostrar erro
+    } catch (error: unknown) {
+      if (error instanceof FirebaseError) {
+        if (error.code === 'auth/popup-closed-by-user') {
+          // Usuário fechou o popup, não mostrar erro
+        } else {
+          toast.error('Erro no cadastro com Google: ' + error.message)
+        }
+      } else if (error instanceof Error) {
+         toast.error('Erro inesperado: ' + error.message)
       } else {
-        toast.error('Erro no cadastro com Google: ' + error.message)
+         toast.error('Ocorreu um erro desconhecido no Google Sign-In.')
       }
     } finally {
       setLoading(false)
