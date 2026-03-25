@@ -1,96 +1,93 @@
-'use client'
-import { useState } from 'react'
-import { supabase } from '@/src/lib/supabase'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { Button } from '@/src/app/components/ui/Button'
+import { LineChart, TrendingUp, Shield, Users } from 'lucide-react'
 
-export default function LoginPage() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const router = useRouter()
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError('')
-    
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-
-    if (error) {
-      setError(error.message)
-      setLoading(false)
-    } else {
-      router.refresh()
-      router.push('/dashboard')
-    }
-  }
-
+export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center p-4">
-      <div className="bg-gray-800 p-8 rounded-2xl shadow-xl w-full max-w-md border border-gray-700">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Portfolio Manager 📈</h1>
-          <p className="text-gray-400">Faça login para acessar sua carteira</p>
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-secondary/20">
+      {/* Header */}
+      <header className="container mx-auto px-6 py-6">
+        <nav className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
+              <LineChart className="w-5 h-5 text-white" />
+            </div>
+            <span className="text-xl font-display font-bold text-foreground">
+              Portfolio Manager
+            </span>
+          </div>
+          <div className="flex items-center gap-4">
+            <Link href="/login">
+              <Button variant="ghost" size="sm">
+                Entrar
+              </Button>
+            </Link>
+            <Link href="/register">
+              <Button variant="default" size="sm">
+                Cadastrar
+              </Button>
+            </Link>
+          </div>
+        </nav>
+      </header>
+
+      {/* Hero Section */}
+      <main className="container mx-auto px-6 py-16">
+        <div className="max-w-4xl mx-auto text-center">
+          <h1 className="text-5xl md:text-6xl font-display font-bold text-foreground mb-6">
+            Gerencie seus investimentos
+            <span className="text-primary block mt-2">de forma inteligente</span>
+          </h1>
+          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
+            Acompanhe sua carteira, receitas e despesas em um só lugar. 
+            Tome decisões melhores com dados em tempo real.
+          </p>
+          <div className="flex items-center justify-center gap-4">
+            <Link href="/register">
+              <Button size="lg" className="bg-gradient-to-r from-primary to-primary/80">
+                Começar agora
+                <TrendingUp className="ml-2 w-4 h-4" />
+              </Button>
+            </Link>
+            <Link href="/login">
+              <Button size="lg" variant="outline">
+                Já tenho conta
+              </Button>
+            </Link>
+          </div>
         </div>
 
-        <form onSubmit={handleLogin} className="space-y-6">
-          {error && (
-            <div className="bg-red-500/10 border border-red-500 text-red-500 p-3 rounded-lg text-sm">
-              {error}
+        {/* Features */}
+        <div className="grid md:grid-cols-3 gap-8 mt-24">
+          <div className="text-center">
+            <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mx-auto mb-4">
+              <TrendingUp className="w-6 h-6 text-primary" />
             </div>
-          )}
-
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
-              E-mail
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full p-3 rounded-lg bg-gray-700 border border-gray-600 text-white focus:outline-none focus:border-green-500 transition"
-              placeholder="seu@email.com"
-              required
-            />
+            <h3 className="text-lg font-semibold mb-2">Acompanhamento em tempo real</h3>
+            <p className="text-muted-foreground">
+              Veja a evolução dos seus investimentos atualizada automaticamente
+            </p>
           </div>
-
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
-              Senha
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-3 rounded-lg bg-gray-700 border border-gray-600 text-white focus:outline-none focus:border-green-500 transition"
-              placeholder="••••••••"
-              required
-            />
+          <div className="text-center">
+            <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mx-auto mb-4">
+              <Shield className="w-6 h-6 text-primary" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">Segurança e privacidade</h3>
+            <p className="text-muted-foreground">
+              Seus dados protegidos com autenticação do Firebase
+            </p>
           </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-green-600 hover:bg-green-700 p-3 rounded-lg font-semibold text-white transition disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? 'Entrando...' : 'Entrar'}
-          </button>
-        </form>
-
-        <p className="text-center text-gray-400 mt-6">
-          Não tem uma conta?{' '}
-          <Link href="/register" className="text-green-500 hover:text-green-400 font-medium">
-            Cadastre-se
-          </Link>
-        </p>
-      </div>
+          <div className="text-center">
+            <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mx-auto mb-4">
+              <Users className="w-6 h-6 text-primary" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">Interface intuitiva</h3>
+            <p className="text-muted-foreground">
+              Design pensado para facilitar o gerenciamento da sua carteira
+            </p>
+          </div>
+        </div>
+      </main>
     </div>
   )
 }
