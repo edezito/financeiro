@@ -1,12 +1,5 @@
 import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
-import { 
-  getAuth, 
-  GoogleAuthProvider,
-  PhoneAuthProvider,
-  browserLocalPersistence,
-  setPersistence,
-  Auth
-} from "firebase/auth";
+import { getAuth, GoogleAuthProvider, Auth } from "firebase/auth";
 
 interface FirebaseConfig {
   apiKey: string | undefined;
@@ -26,30 +19,21 @@ const firebaseConfig: FirebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
 };
 
+// 1. Declaramos as variáveis vazias primeiro
 let app: FirebaseApp | undefined;
 let auth: Auth | undefined;
 let googleProvider: GoogleAuthProvider | undefined;
-let phoneProvider: PhoneAuthProvider | undefined;
 
-// Inicializa apenas se a API Key estiver presente e estiver no navegador
-if (firebaseConfig.apiKey && typeof window !== 'undefined') {
+// 2. A "Blindagem": Só inicializa se estiver no navegador E se a chave existir
+if (typeof window !== 'undefined' && firebaseConfig.apiKey) {
   try {
-    app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+    app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
     auth = getAuth(app);
-    
-    // Configura persistência local
-    setPersistence(auth, browserLocalPersistence)
-      .catch((error) => {
-        console.error("Erro ao configurar persistência:", error);
-      });
-
     googleProvider = new GoogleAuthProvider();
-    phoneProvider = new PhoneAuthProvider(auth);
-    
-    console.log('✅ Firebase Auth inicializado no cliente');
+    console.log('✅ Firebase inicializado no cliente');
   } catch (error) {
     console.error("Erro ao inicializar Firebase:", error);
   }
 }
 
-export { auth, googleProvider, phoneProvider };
+export { app, auth, googleProvider };
