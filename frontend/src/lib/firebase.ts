@@ -1,5 +1,11 @@
-import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider, Auth, PhoneAuthProvider } from "firebase/auth";
+import { initializeApp, getApps } from "firebase/app";
+import { 
+  getAuth, 
+  GoogleAuthProvider,
+  PhoneAuthProvider,
+  browserLocalPersistence,
+  setPersistence
+} from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -10,19 +16,31 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
 };
 
-let app: FirebaseApp | undefined;
-let auth: Auth | undefined;
-let googleProvider: GoogleAuthProvider | undefined;
+// Inicializa o Firebase apenas no cliente
+let app: any = null;
+let auth: any = null;
+let googleProvider: any = null;
+let phoneProvider: any = null;
 
-// Só tenta inicializar se houver uma API Key (evita erro no build da Vercel)
-if (firebaseConfig.apiKey && typeof window !== 'undefined') {
+if (typeof window !== 'undefined') {
   try {
-    app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+    app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
     auth = getAuth(app);
+    
+    // Configura persistência local
+    setPersistence(auth, browserLocalPersistence)
+      .catch((error) => {
+        console.error("Erro ao configurar persistência:", error);
+      });
+
+    // Inicializa providers
     googleProvider = new GoogleAuthProvider();
+    phoneProvider = new PhoneAuthProvider(auth);
+    
+    console.log('✅ Firebase Auth inicializado no cliente');
   } catch (error) {
     console.error("Erro ao inicializar Firebase:", error);
   }
 }
 
-export { app, auth, googleProvider };
+export { auth, googleProvider, phoneProvider };

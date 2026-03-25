@@ -21,8 +21,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Verifica se está no cliente e se auth existe
     if (typeof window === 'undefined' || !auth) {
-      setLoading(false)
-      return
+      const timer = setTimeout(() => {
+        setLoading(false)
+      }, 0)
+      return () => clearTimeout(timer)
     }
 
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {

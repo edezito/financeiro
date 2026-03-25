@@ -1,7 +1,7 @@
 // src/components/Lancamentos.tsx
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState} from 'react'
 import { Button } from '@/src/app/components/ui/Button'
 import { Input } from '@/src/app/components/ui/Input'
 import { Card, CardHeader, CardTitle, CardContent } from '@/src/app/components/ui/Card'

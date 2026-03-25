@@ -1,9 +1,26 @@
-/* src/app/globals.css */
+@import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;600;700&display=swap');
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-border: var(--border);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-interactive: var(--interactive);
+  
+  --font-body: "Inter", sans-serif;
+  --font-display: "Roboto Mono", monospace;
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --border: #e2e8f0;
+  --muted-foreground: #64748b;
+  --interactive: #3b82f6;
+}
 
 @layer base {
   * {
@@ -18,7 +35,6 @@
     @apply font-display tracking-tight;
   }
 
-  /* Scrollbar styling */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;

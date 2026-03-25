@@ -1,9 +1,9 @@
-// src/components/ui/Button.tsx
 import { forwardRef, ButtonHTMLAttributes } from 'react'
 import { cn } from '@/src/lib/utils'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'default' | 'success' | 'destructive' | 'ghost'
+  // Adicionado 'outline' aqui para o TS parar de reclamar
+  variant?: 'default' | 'success' | 'destructive' | 'ghost' | 'outline'
   size?: 'sm' | 'md' | 'lg'
 }
 
@@ -14,6 +14,8 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       success: 'bg-success text-black hover:bg-success/90',
       destructive: 'bg-destructive text-black hover:bg-destructive/90',
       ghost: 'bg-transparent hover:bg-accent text-muted-foreground hover:text-foreground',
+      // Definição visual do outline
+      outline: 'bg-transparent border border-border hover:bg-secondary/10 text-foreground',
     }
 
     const sizes = {
@@ -27,7 +29,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         className={cn(
           'rounded-md font-display font-medium transition-all duration-200',
-          'disabled:opacity-50 disabled:cursor-not-allowed',
+          'disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center',
           variants[variant],
           sizes[size],
           className

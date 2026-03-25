@@ -13,6 +13,7 @@ import {
   signInWithPopup,
   sendPasswordResetEmail
 } from 'firebase/auth'
+import { FirebaseError } from 'firebase/app'
 import { 
   Mail, 
   Lock, 
@@ -97,21 +98,27 @@ export default function LoginPage() {
       
       router.refresh()
       router.push('/dashboard')
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Erro no login:', error)
       
-      if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-        toast.error('E-mail ou senha incorretos.', {
-          icon: <AlertCircle className="w-4 h-4 text-destructive" />,
-        })
-      } else if (error.code === 'auth/too-many-requests') {
-        toast.error('Muitas tentativas. Tente novamente mais tarde.')
-      } else if (error.code === 'auth/user-disabled') {
-        toast.error('Esta conta foi desativada.')
-      } else if (error.code === 'auth/network-request-failed') {
-        toast.error('Erro de conexão. Verifique sua internet.')
+      if (error instanceof FirebaseError) {
+        if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+          toast.error('E-mail ou senha incorretos.', {
+            icon: <AlertCircle className="w-4 h-4 text-destructive" />,
+          })
+        } else if (error.code === 'auth/too-many-requests') {
+          toast.error('Muitas tentativas. Tente novamente mais tarde.')
+        } else if (error.code === 'auth/user-disabled') {
+          toast.error('Esta conta foi desativada.')
+        } else if (error.code === 'auth/network-request-failed') {
+          toast.error('Erro de conexão. Verifique sua internet.')
+        } else {
+          toast.error('Erro ao fazer login: ' + error.message)
+        }
+      } else if (error instanceof Error) {
+        toast.error('Erro inesperado: ' + error.message)
       } else {
-        toast.error('Erro ao fazer login: ' + error.message)
+        toast.error('Ocorreu um erro desconhecido durante o login.')
       }
     } finally {
       setLoading(false)
@@ -131,13 +138,19 @@ export default function LoginPage() {
       
       router.refresh()
       router.push('/dashboard')
-    } catch (error: any) {
-      if (error.code === 'auth/popup-closed-by-user') {
-        // Usuário fechou o popup - não mostrar erro
-      } else if (error.code === 'auth/popup-blocked') {
-        toast.error('Popup bloqueado. Permita popups para este site.')
+    } catch (error: unknown) {
+      if (error instanceof FirebaseError) {
+        if (error.code === 'auth/popup-closed-by-user') {
+          // Usuário fechou o popup - não mostrar erro
+        } else if (error.code === 'auth/popup-blocked') {
+          toast.error('Popup bloqueado. Permita popups para este site.')
+        } else {
+          toast.error('Erro no login com Google: ' + error.message)
+        }
+      } else if (error instanceof Error) {
+        toast.error('Erro inesperado: ' + error.message)
       } else {
-        toast.error('Erro no login com Google: ' + error.message)
+        toast.error('Ocorreu um erro desconhecido no Google Sign-In.')
       }
     } finally {
       setLoading(false)
@@ -162,11 +175,17 @@ export default function LoginPage() {
         setResetPasswordMode(false)
         setResetEmailSent(false)
       }, 5000)
-    } catch (error: any) {
-      if (error.code === 'auth/user-not-found') {
-        toast.error('E-mail não encontrado.')
+    } catch (error: unknown) {
+      if (error instanceof FirebaseError) {
+        if (error.code === 'auth/user-not-found') {
+          toast.error('E-mail não encontrado.')
+        } else {
+          toast.error('Erro ao enviar e-mail: ' + error.message)
+        }
+      } else if (error instanceof Error) {
+        toast.error('Erro inesperado: ' + error.message)
       } else {
-        toast.error('Erro ao enviar e-mail: ' + error.message)
+        toast.error('Ocorreu um erro desconhecido na recuperação de senha.')
       }
     } finally {
       setLoading(false)
